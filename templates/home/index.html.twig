@@ -1,0 +1,147 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12 p-5">
+
+            <!-- Form -->
+            <div class="card my-12 mb-5">
+                <h5 class="card-header">Hello, I'am valid form.</h5>
+                <div class="card-body">
+                    <form id="valid-form">
+                        <div class="form-group">
+                            <label for="email">Email address</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter email">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Confirm Password</label>
+                            <input type="password" class="form-control" id="password-confirm" name="password_confirm" placeholder="Confirm Password">
+                        </div>
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" class="form-control" id="age" name="age" placeholder="Age">
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="city">City</label>
+                            <select id="city" name="city" class="form-control">
+                                <option value="" selected>Choose...</option>
+                                <option>Minsk</option>
+                                <option>Gomel</option>
+                                <option>Vitebsk</option>
+                                <option>Mogilev</option>
+                                <option>Hrodna</option>
+                                <option>Brest</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    <!-- /.row -->
+{% endblock %}
+
+{% block javascripts %}
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            let myForm= $('#valid-form');
+
+            myForm.validate({
+                rules: {
+                    'email': {
+                        required: true,
+                        email: true
+                    },
+                    'password': {
+                        required: true,
+                        minlength: 5
+                    },
+                    'password_confirm': {
+                        required: true,
+                        minlength: 5,
+                        equalTo: "#password"
+                    },
+                    'city': {
+                        required: true,
+                    }
+
+                },
+                messages: {
+                    'email': {
+                        required: "Please enter your email",
+                        email: "Please enter a valid email address"
+                    },
+                    'password': {
+                        required: "Please enter your password",
+                        minlength: "Your password must be at least 5 characters long"
+                    },
+                    'password-confirm': {
+                        required: "Please provide a password",
+                        minlength: "Your password must be at least 5 characters long",
+                        equalTo: "Please enter the same password as above"
+                    },
+                    'city': {
+                        required: "Please select an city"
+                    }
+                },
+                errorElement: 'div',
+                errorPlacement: function (error, element) {
+                    error.addClass('invalid-feedback');
+                    element.closest('.form-group').append(error);
+                },
+                highlight: function (element, errorClass, validClass) {
+                    $(element).addClass('is-invalid');
+                },
+                unhighlight: function (element, errorClass, validClass) {
+                    $(element).removeClass('is-invalid');
+                }
+            });
+
+            myForm.submit(function(e) {
+                e.preventDefault();
+
+                if(!$(this).valid()) {
+                    return;
+                }
+
+                let formData = {};
+                $(this).serializeArray().forEach((object)=>{
+                    formData[object.name] = object.value;
+                });
+
+                $.ajax({
+                    type: 'post',
+                    url: "{{ path('registry') }}",
+                    data: {
+                        '_method': 'post',
+                        '_token': '{{ csrf_token('registry') }}',
+                        'formData':  JSON.stringify(formData)
+                    },
+                    dataType: 'json'
+                }).done(function (data) {
+                    if (!data.validate) {
+                        $.each( data.validate_errors, function( key, value ) {
+                            $('#' + key).addClass('is-invalid');
+                            $('#' + key).parent().append('<div class="error invalid-feedback">' + value + '</div>');
+                        });
+                    }
+                });
+            });
+
+        });
+    </script>
+
+{% endblock %}
